@@ -57,6 +57,10 @@ CREATE TABLE IF NOT EXISTS archive (
   size              BIGINT NOT NULL DEFAULT NULL
 );
 
+ALTER TABLE archive
+  ADD COLUMN IF NOT EXISTS expunged BOOLEAN NOT NULL DEFAULT FALSE,
+  ADD COLUMN IF NOT EXISTS redirect_id BIGINT DEFAULT NULL REFERENCES archive(id) ON DELETE CASCADE;
+
 CREATE UNIQUE INDEX IF NOT EXISTS archive_path_uindex ON archive(path);
 CREATE INDEX IF NOT EXISTS archive_title_index ON archive(title);
 CREATE INDEX IF NOT EXISTS archive_slug_index ON archive(slug);

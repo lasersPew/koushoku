@@ -68,6 +68,7 @@ CREATE INDEX IF NOT EXISTS archive_pages_index ON archive(pages);
 CREATE INDEX IF NOT EXISTS archive_created_at_index ON archive(created_at);
 CREATE INDEX IF NOT EXISTS archive_updated_at_index ON archive(updated_at);
 CREATE INDEX IF NOT EXISTS archive_published_at_index ON archive(published_at);
+CREATE INDEX IF NOT EXISTS archive_expunged_index ON archive(expunged);
 
 CREATE TABLE IF NOT EXISTS archive_artists (
   archive_id BIGINT NOT NULL DEFAULT NULL REFERENCES archive(id) ON DELETE CASCADE,

@@ -300,6 +300,8 @@ func (opts *GetArchivesOptions) Validate() {
 		opts.Sort = ArchiveCols.PublishedAt
 	} else if strings.EqualFold(opts.Sort, ArchiveCols.Title) {
 		opts.Sort = ArchiveCols.Title
+	} else if strings.EqualFold(opts.Sort, ArchiveCols.Pages) {
+		opts.Sort = ArchiveCols.Pages
 	} else {
 		opts.Sort = ArchiveCols.CreatedAt
 	}

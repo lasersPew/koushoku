@@ -28,6 +28,13 @@
       href="{{ createQuery .query "sort" "published_at" }}"
       >Published</a
     >
+    <a
+      {{- if eq .queries.Sort "pages" }}
+        class="active"
+      {{- end }}
+      href="{{ createQuery .query "sort" "pages" }}"
+      >Pages</a
+    >
     <a {{ if eq .queries.Order "asc" }}class="active"{{ end }} href="{{ createQuery .query "order" "asc" }}">ASC</a>
     <a {{ if eq .queries.Order "desc" }}class="active"{{ end }}href="{{ createQuery .query "order" "desc" }}">DESC</a>
   </div>

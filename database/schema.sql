@@ -58,8 +58,7 @@ CREATE TABLE IF NOT EXISTS archive (
 );
 
 ALTER TABLE archive
-  ADD COLUMN IF NOT EXISTS expunged BOOLEAN NOT NULL DEFAULT FALSE,
-  ADD COLUMN IF NOT EXISTS redirect_id BIGINT DEFAULT NULL REFERENCES archive(id) ON DELETE CASCADE;
+  ADD COLUMN IF NOT EXISTS expunged BOOLEAN NOT NULL DEFAULT FALSE;
 
 CREATE UNIQUE INDEX IF NOT EXISTS archive_path_uindex ON archive(path);
 CREATE INDEX IF NOT EXISTS archive_title_index ON archive(title);
@@ -177,5 +176,25 @@ CREATE INDEX IF NOT EXISTS submission_accepted_index ON submission(accepted);
 CREATE INDEX IF NOT EXISTS submission_rejected_at_index ON submission(rejected_at);
 CREATE INDEX IF NOT EXISTS submission_rejected_index ON submission(rejected);
 
-ALTER TABLE archive
-  ADD COLUMN IF NOT EXISTS submission_id BIGINT DEFAULT NULL REFERENCES submission(id) ON DELETE CASCADE;
+DO $$
+  DECLARE r record;
+BEGIN
+  FOR r IN
+    SELECT conname FROM pg_constraint
+      JOIN pg_class ON pg_constraint.conrelid = pg_class.oid
+      WHERE pg_class.relname = 'archive'
+      AND conname LIKE ANY (ARRAY['archive_redirect_id_fkey%', 'archive_submission_id_fkey%'])
+      AND conname != ALL (ARRAY['archive_redirect_id_fkey', 'archive_submission_id_fkey'])
+  LOOP
+    EXECUTE 'ALTER TABLE archive DROP CONSTRAINT ' || r.conname;
+  END LOOP;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'archive_submission_id_fkey') THEN
+    ALTER TABLE archive
+      ADD COLUMN submission_id BIGINT DEFAULT NULL REFERENCES submission(id) ON DELETE CASCADE;
+  END IF;
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'archive_redirect_id_fkey') THEN
+    ALTER TABLE archive
+      ADD COLUMN redirect_id BIGINT DEFAULT NULL REFERENCES archive(id) ON DELETE CASCADE;
+  END IF;
+END;
+$$;

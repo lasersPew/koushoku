@@ -2,7 +2,10 @@
   {{- $dataBaseURL := .dataBaseURL }}
   <div class="entries">
     {{- range .archives }}
-      <article class="entry">
+      <article
+        class="entry"
+        {{- if .Tags }}data-tags="{{- range $i, $v := .Tags -}}{{ if $i }}|{{ end }}{{ .Name }}{{ end }}"{{- end }}
+      >
         <a href="/archive/{{ .ID }}/{{ .Slug }}" title="{{ .Title }}">
           <figure class="thumbnail">
             <img

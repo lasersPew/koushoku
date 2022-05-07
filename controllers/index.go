@@ -60,6 +60,7 @@ func Index(c *server.Context) {
 			services.ArchiveRels.Artists,
 			services.ArchiveRels.Circles,
 			services.ArchiveRels.Magazines,
+			services.ArchiveRels.Tags,
 		},
 
 		Sort:  q.Sort,
@@ -110,6 +111,7 @@ func Search(c *server.Context) {
 			services.ArchiveRels.Artists,
 			services.ArchiveRels.Circles,
 			services.ArchiveRels.Magazines,
+			services.ArchiveRels.Tags,
 		},
 
 		Sort:  q.Sort,

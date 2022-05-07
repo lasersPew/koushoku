@@ -422,7 +422,7 @@ body > #error {
   font-size: 0;
   margin-top: -0.4rem;
 
-  a {
+  > * {
     box-shadow: 0 0 1rem fade(#000, 25%);
     border: 0.1rem solid lighten(@bg-secondary, 4%);
     border-radius: 0.5rem;
@@ -431,6 +431,7 @@ body > #error {
     font-size: 1.6rem;
     line-height: 2rem;
 
+    vertical-align: top;
     display: inline-block;
     padding: 0.4rem 0.8rem;
 
@@ -498,6 +499,10 @@ body > #error {
   }
 }
 
+.feed#archives .entry[data-hidden] .thumbnail img:not(:hover) {
+  filter: blur(25px);
+}
+
 .feed#archives .entry .metadata {
   font-size: 1.4rem;
   line-height: 1.8rem;
@@ -535,6 +540,10 @@ body > #error {
 
   display: block;
   width: 100%;
+
+  &[data-hidden] {
+    display: none;
+  }
 }
 
 .feed#archives .entry a:hover .magazine,
@@ -546,6 +555,10 @@ body > #error {
   border-radius: 0.5rem;
   display: inline-block;
   margin: 0.8rem;
+
+  &[data-hidden] {
+    display: none;
+  }
 }
 
 .feed#archives .entry > a > .metadata {
@@ -571,6 +584,10 @@ body > #error {
 .feed#archives .entry a:hover .title,
 .feed#archives .entry a:focus-visible .title {
   color: lighten(@text, 15%);
+}
+
+.feed#archives .entry .artists[data-hidden] {
+  display: none;
 }
 
 .feed#taxonomy .entries {
@@ -704,6 +721,11 @@ header .pagination:not(:last-child) {
     width: 100%;
     height: 100%;
   }
+}
+
+#archive a[href*="crossdress"],
+#archive a[href*="yaoi"] {
+  color: #e53935;
 }
 
 #archive .title {
@@ -1170,14 +1192,15 @@ header .pagination:not(:last-child) {
   display: inline-block;
 }
 
-.settings-section.max-width .wrapper {
+.settings-section.max-width .wrapper,
+.settings-section.blacklist .wrapper {
   padding: 0.4rem 0.6rem;
+}
 
-  input {
-    text-align: right;
-    flex: 1 0 auto;
-    width: 8rem;
-  }
+.settings-section.max-width .wrapper input {
+  text-align: right;
+  flex: 1 0 auto;
+  width: 8rem;
 }
 
 .settings-section.reading-mode button {
@@ -1189,6 +1212,34 @@ header .pagination:not(:last-child) {
 
   &.active {
     text-decoration: underline;
+  }
+}
+
+.settings-section input[type="checkbox"] {
+  box-shadow: 0 0 1rem fade(#000, 25%);
+  border: 0.1rem solid lighten(@bg-secondary, 4%);
+  border-radius: 0.4rem;
+  background-color: @bg-secondary;
+
+  position: relative;
+  cursor: pointer;
+  width: 2.4rem;
+  height: 2.4rem;
+
+  &:hover {
+    background-color: lighten(@bg-secondary, 2%);
+  }
+
+  &:checked:before {
+    content: "";
+    position: absolute;
+    top: 10%;
+    left: 10%;
+    width: 80%;
+    height: 80%;
+
+    border-radius: 0.4rem;
+    background-color: lighten(@bg-secondary, 15%);
   }
 }
 

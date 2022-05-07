@@ -34,6 +34,7 @@ func Artist(c *server.Context) {
 			services.ArchiveRels.Artists,
 			services.ArchiveRels.Circles,
 			services.ArchiveRels.Magazines,
+			services.ArchiveRels.Tags,
 		},
 
 		Sort:  q.Sort,
@@ -85,6 +86,7 @@ func Circle(c *server.Context) {
 			services.ArchiveRels.Artists,
 			services.ArchiveRels.Circles,
 			services.ArchiveRels.Magazines,
+			services.ArchiveRels.Tags,
 		},
 
 		Sort:  q.Sort,
@@ -136,6 +138,7 @@ func Magazine(c *server.Context) {
 			services.ArchiveRels.Artists,
 			services.ArchiveRels.Circles,
 			services.ArchiveRels.Magazines,
+			services.ArchiveRels.Tags,
 		},
 
 		Sort:  q.Sort,
@@ -187,6 +190,7 @@ func Parody(c *server.Context) {
 			services.ArchiveRels.Artists,
 			services.ArchiveRels.Circles,
 			services.ArchiveRels.Magazines,
+			services.ArchiveRels.Tags,
 		},
 
 		Sort:  q.Sort,
@@ -238,6 +242,7 @@ func Tag(c *server.Context) {
 			services.ArchiveRels.Artists,
 			services.ArchiveRels.Circles,
 			services.ArchiveRels.Magazines,
+			services.ArchiveRels.Tags,
 		},
 
 		Sort:  q.Sort,

@@ -1,4 +1,12 @@
-import { getSettings, Mode, setSetting, settings } from "./settings";
+import {
+  getReaderSettings,
+  getSettings,
+  Mode,
+  readerSettings,
+  setReaderSettings,
+  setSettings,
+  settings
+} from "./settings";
 import "./styles/main.less";
 
 interface PageState {
@@ -32,22 +40,22 @@ const preventDefault = (ev: MouseEvent) => {
   ev.stopImmediatePropagation();
 };
 
-const applySettings = () => {
-  if (settings.maxWidth > 0) {
-    pageContainer.style.maxWidth = `${settings.maxWidth}px`;
+const applyReaderSettings = () => {
+  if (readerSettings.maxWidth > 0) {
+    pageContainer.style.maxWidth = `${readerSettings.maxWidth}px`;
   } else pageContainer.style.maxWidth = "";
 
-  if (settings.zoomLevel > 0) {
-    (pageContainer.style as any).zoom = `${settings.zoomLevel}`;
+  if (readerSettings.zoomLevel > 0) {
+    (pageContainer.style as any).zoom = `${readerSettings.zoomLevel}`;
   } else (pageContainer.style as any).zoom = "";
 
   const img = pageContainer.firstElementChild as HTMLImageElement;
-  if (settings.zoomLevel > 1.0) {
-    img.style.maxWidth = `${window.innerWidth * settings.zoomLevel}px`;
+  if (readerSettings.zoomLevel > 1.0) {
+    img.style.maxWidth = `${window.innerWidth * readerSettings.zoomLevel}px`;
   } else img.style.maxWidth = "";
 
   document.querySelectorAll(".zoom-level").forEach((span: HTMLElement) => {
-    span.innerText = `${(settings.zoomLevel * 100).toFixed()}%`;
+    span.innerText = `${(readerSettings.zoomLevel * 100).toFixed()}%`;
   });
 };
 
@@ -61,10 +69,10 @@ const attachHandlers = () => {
     if (btn.dataset.attached) return;
     btn.dataset.attached = "true";
     btn.addEventListener("click", () => {
-      const zoomLevel = (settings.zoomLevel + 0.1).toFixed(1);
+      const zoomLevel = (readerSettings.zoomLevel + 0.1).toFixed(1);
 
-      setSetting("zoomLevel", Math.max(0.1, Number(zoomLevel)));
-      applySettings();
+      setReaderSettings("zoomLevel", Math.max(0.1, Number(zoomLevel)));
+      applyReaderSettings();
     });
   });
 
@@ -72,9 +80,9 @@ const attachHandlers = () => {
     if (btn.dataset.attached) return;
     btn.dataset.attached = "true";
     btn.addEventListener("click", () => {
-      const zoomLevel = (settings.zoomLevel - 0.1).toFixed(1);
-      setSetting("zoomLevel", Math.min(2.0, Number(zoomLevel)));
-      applySettings();
+      const zoomLevel = (readerSettings.zoomLevel - 0.1).toFixed(1);
+      setReaderSettings("zoomLevel", Math.min(2.0, Number(zoomLevel)));
+      applyReaderSettings();
     });
   });
 
@@ -124,7 +132,7 @@ showSettingsPopup = () => {
     zoomOutBtn.classList.add("zoom-out");
 
     const zoomLevelText = document.createElement("span");
-    zoomLevelText.textContent = `${(settings.zoomLevel * 100).toFixed()}%`;
+    zoomLevelText.textContent = `${(readerSettings.zoomLevel * 100).toFixed()}%`;
     zoomLevelText.classList.add("zoom-level");
 
     const zoomInBtn = document.createElement("button");
@@ -150,16 +158,16 @@ showSettingsPopup = () => {
     const input = document.createElement("input");
     input.type = "number";
     input.min = "0";
-    input.defaultValue = settings.maxWidth.toString();
+    input.defaultValue = readerSettings.maxWidth.toString();
     input.addEventListener("change", () => {
       const value = Number(input.value);
       if (Number.isNaN(value)) {
         input.value = "0";
       }
 
-      if (settings.maxWidth !== value) {
-        setSetting("maxWidth", value);
-        applySettings();
+      if (readerSettings.maxWidth !== value) {
+        setReaderSettings("maxWidth", value);
+        applyReaderSettings();
       }
     });
 
@@ -247,7 +255,7 @@ const changePage = (targetPageNum: number) => {
     pageStates.find(p => p.isViewing).isViewing = false;
     pageStates[currPageNum - 1].isViewing = true;
 
-    if (settings.mode === Mode.Normal) {
+    if (readerSettings.mode === Mode.Normal) {
       pageContainer.href = `/archive/${id}/${slug}/${currPageNum}`;
       const newImg = document.createElement("img");
       newImg.src = `${origin}/data/${id}/${currPageNum}.jpg`;
@@ -307,6 +315,103 @@ const initPreload = () => {
   }
 };
 
+const applySettings = () => {
+  document.querySelectorAll("article[data-hidden]").forEach(e => e.removeAttribute("data-hidden"));
+  if (settings.blacklist) {
+    document.querySelectorAll("article[data-tags]").forEach((e: HTMLElement) => {
+      const tags = (e.dataset.tags as string).trim().toLowerCase();
+      if (settings.blacklist.some(tag => tags.includes(tag.toLowerCase()))) {
+        e.dataset.hidden = "true";
+      }
+    });
+  }
+};
+
+const showIndexSettingsPopup = () => {
+  if (document.getElementById("settings-popup")) {
+    return;
+  }
+
+  const popup = document.createElement("div");
+  popup.id = "settings-popup";
+
+  const overlay = document.createElement("div");
+  overlay.addEventListener("click", () => popup.remove());
+  overlay.classList.add("settings-overlay");
+
+  const content = document.createElement("div");
+  content.classList.add("settings-content");
+
+  const header = document.createElement("div");
+  header.classList.add("settings-header");
+
+  const title = document.createElement("span");
+  title.textContent = "Settings";
+  header.appendChild(title);
+
+  const container = document.createElement("div");
+  container.classList.add("settings-container");
+  {
+    const section = document.createElement("div");
+    section.classList.add("settings-section", "blacklist");
+
+    const label = document.createElement("span");
+    label.textContent = "Hide tags";
+
+    const actions = document.createElement("div");
+    const wrapper = document.createElement("div");
+    wrapper.classList.add("wrapper");
+
+    const input = document.createElement("input");
+    input.type = "text";
+    input.defaultValue = settings.blacklist.join(", ");
+    input.addEventListener("input", () => {
+      const blacklist = input.value
+        .split(",")
+        .map(e => e.trim())
+        .filter(e => e);
+      setSettings("blacklist", blacklist);
+      applySettings();
+    });
+
+    wrapper.appendChild(input);
+    actions.appendChild(wrapper);
+    section.append(label, actions);
+    container.appendChild(section);
+  }
+
+  const note = document.createElement("p");
+  note.textContent = "Tags are case-insensitive, delimited by commas.";
+  note.style.marginTop = "1rem";
+  container.appendChild(note);
+
+  const footer = document.createElement("div");
+  footer.classList.add("footer");
+
+  const closeBtn = document.createElement("button");
+  closeBtn.classList.add("close");
+  closeBtn.type = "button";
+  closeBtn.textContent = "Close";
+  closeBtn.addEventListener("click", () => popup.remove());
+
+  footer.appendChild(closeBtn);
+  container.appendChild(footer);
+  content.append(header, container);
+  popup.append(overlay, content);
+
+  document.body.appendChild(popup);
+};
+
+const initIndexSettings = () => {
+  const toggleBtn = document.querySelector(".toggle-filter");
+  if (!toggleBtn) return;
+
+  getSettings();
+  applySettings();
+
+  toggleBtn.addEventListener("click", () => showIndexSettingsPopup());
+};
+
 const init = () => {
   if ("serviceWorker" in navigator) {
     navigator.serviceWorker.getRegistrations().then(registrations => {
@@ -315,6 +420,8 @@ const init = () => {
       }
     });
   }
+
+  initIndexSettings();
 
   const reader = document.getElementById("reader");
   if (!reader) return;
@@ -375,7 +482,7 @@ const init = () => {
     preventDefault(ev);
 
     const target = ev.target as HTMLImageElement;
-    const isPrev = ev.offsetX <= (target.clientWidth * settings.zoomLevel) / 2;
+    const isPrev = ev.offsetX <= (target.clientWidth * readerSettings.zoomLevel) / 2;
 
     if (isPrev && currPageNum > 1) {
       changePage(currPageNum - 1);
@@ -410,8 +517,8 @@ const init = () => {
     }
   });
 
-  getSettings();
-  applySettings();
+  getReaderSettings();
+  applyReaderSettings();
   attachHandlers();
 
   scrollIntoView();

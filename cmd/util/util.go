@@ -49,6 +49,7 @@ var opts struct {
 	Archives []int64 `long:"archive"`
 	Expunge  bool    `long:"expunge"`
 	Redirect int64   `long:"redirect"`
+	Source   string  `long:"source"`
 }
 
 func main() {
@@ -214,7 +215,7 @@ func main() {
 		services.GenerateCache()
 	}
 
-	if len(opts.Archives) > 0 && (opts.Redirect > 0 || opts.Expunge) {
+	if len(opts.Archives) > 0 && (opts.Redirect > 0 || opts.Expunge || len(opts.Source) > 0) {
 		for _, id := range opts.Archives {
 			if opts.Expunge {
 				services.ExpungeArchive(id)
@@ -222,6 +223,10 @@ func main() {
 
 			if opts.Redirect > 0 {
 				services.RedirectArchive(id, opts.Redirect)
+			}
+
+			if len(opts.Source) > 0 {
+				services.SetArchiveSource(id, opts.Source)
 			}
 		}
 	}

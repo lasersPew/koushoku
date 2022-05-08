@@ -23,18 +23,19 @@ import (
 
 // Archive is an object representing the database table.
 type Archive struct {
-	ID           int64      `boil:"id" json:"id" toml:"id" yaml:"id"`
-	Path         string     `boil:"path" json:"path" toml:"path" yaml:"path"`
-	CreatedAt    time.Time  `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
-	UpdatedAt    time.Time  `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
-	PublishedAt  null.Time  `boil:"published_at" json:"published_at,omitempty" toml:"published_at" yaml:"published_at,omitempty"`
-	Title        string     `boil:"title" json:"title" toml:"title" yaml:"title"`
-	Slug         string     `boil:"slug" json:"slug" toml:"slug" yaml:"slug"`
-	Pages        int16      `boil:"pages" json:"pages" toml:"pages" yaml:"pages"`
-	Size         int64      `boil:"size" json:"size" toml:"size" yaml:"size"`
-	Expunged     bool       `boil:"expunged" json:"expunged" toml:"expunged" yaml:"expunged"`
-	RedirectID   null.Int64 `boil:"redirect_id" json:"redirect_id,omitempty" toml:"redirect_id" yaml:"redirect_id,omitempty"`
-	SubmissionID null.Int64 `boil:"submission_id" json:"submission_id,omitempty" toml:"submission_id" yaml:"submission_id,omitempty"`
+	ID           int64       `boil:"id" json:"id" toml:"id" yaml:"id"`
+	Path         string      `boil:"path" json:"path" toml:"path" yaml:"path"`
+	CreatedAt    time.Time   `boil:"created_at" json:"created_at" toml:"created_at" yaml:"created_at"`
+	UpdatedAt    time.Time   `boil:"updated_at" json:"updated_at" toml:"updated_at" yaml:"updated_at"`
+	PublishedAt  null.Time   `boil:"published_at" json:"published_at,omitempty" toml:"published_at" yaml:"published_at,omitempty"`
+	Title        string      `boil:"title" json:"title" toml:"title" yaml:"title"`
+	Slug         string      `boil:"slug" json:"slug" toml:"slug" yaml:"slug"`
+	Pages        int16       `boil:"pages" json:"pages" toml:"pages" yaml:"pages"`
+	Size         int64       `boil:"size" json:"size" toml:"size" yaml:"size"`
+	Expunged     bool        `boil:"expunged" json:"expunged" toml:"expunged" yaml:"expunged"`
+	Source       null.String `boil:"source" json:"source,omitempty" toml:"source" yaml:"source,omitempty"`
+	SubmissionID null.Int64  `boil:"submission_id" json:"submission_id,omitempty" toml:"submission_id" yaml:"submission_id,omitempty"`
+	RedirectID   null.Int64  `boil:"redirect_id" json:"redirect_id,omitempty" toml:"redirect_id" yaml:"redirect_id,omitempty"`
 
 	R *archiveR `boil:"-" json:"-" toml:"-" yaml:"-"`
 	L archiveL  `boil:"-" json:"-" toml:"-" yaml:"-"`
@@ -51,8 +52,9 @@ var ArchiveColumns = struct {
 	Pages        string
 	Size         string
 	Expunged     string
-	RedirectID   string
+	Source       string
 	SubmissionID string
+	RedirectID   string
 }{
 	ID:           "id",
 	Path:         "path",
@@ -64,8 +66,9 @@ var ArchiveColumns = struct {
 	Pages:        "pages",
 	Size:         "size",
 	Expunged:     "expunged",
-	RedirectID:   "redirect_id",
+	Source:       "source",
 	SubmissionID: "submission_id",
+	RedirectID:   "redirect_id",
 }
 
 var ArchiveTableColumns = struct {
@@ -79,8 +82,9 @@ var ArchiveTableColumns = struct {
 	Pages        string
 	Size         string
 	Expunged     string
-	RedirectID   string
+	Source       string
 	SubmissionID string
+	RedirectID   string
 }{
 	ID:           "archive.id",
 	Path:         "archive.path",
@@ -92,8 +96,9 @@ var ArchiveTableColumns = struct {
 	Pages:        "archive.pages",
 	Size:         "archive.size",
 	Expunged:     "archive.expunged",
-	RedirectID:   "archive.redirect_id",
+	Source:       "archive.source",
 	SubmissionID: "archive.submission_id",
+	RedirectID:   "archive.redirect_id",
 }
 
 // Generated where
@@ -221,6 +226,30 @@ func (w whereHelperbool) LTE(x bool) qm.QueryMod { return qmhelper.Where(w.field
 func (w whereHelperbool) GT(x bool) qm.QueryMod  { return qmhelper.Where(w.field, qmhelper.GT, x) }
 func (w whereHelperbool) GTE(x bool) qm.QueryMod { return qmhelper.Where(w.field, qmhelper.GTE, x) }
 
+type whereHelpernull_String struct{ field string }
+
+func (w whereHelpernull_String) EQ(x null.String) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, false, x)
+}
+func (w whereHelpernull_String) NEQ(x null.String) qm.QueryMod {
+	return qmhelper.WhereNullEQ(w.field, true, x)
+}
+func (w whereHelpernull_String) LT(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LT, x)
+}
+func (w whereHelpernull_String) LTE(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.LTE, x)
+}
+func (w whereHelpernull_String) GT(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GT, x)
+}
+func (w whereHelpernull_String) GTE(x null.String) qm.QueryMod {
+	return qmhelper.Where(w.field, qmhelper.GTE, x)
+}
+
+func (w whereHelpernull_String) IsNull() qm.QueryMod    { return qmhelper.WhereIsNull(w.field) }
+func (w whereHelpernull_String) IsNotNull() qm.QueryMod { return qmhelper.WhereIsNotNull(w.field) }
+
 type whereHelpernull_Int64 struct{ field string }
 
 func (w whereHelpernull_Int64) EQ(x null.Int64) qm.QueryMod {
@@ -256,8 +285,9 @@ var ArchiveWhere = struct {
 	Pages        whereHelperint16
 	Size         whereHelperint64
 	Expunged     whereHelperbool
-	RedirectID   whereHelpernull_Int64
+	Source       whereHelpernull_String
 	SubmissionID whereHelpernull_Int64
+	RedirectID   whereHelpernull_Int64
 }{
 	ID:           whereHelperint64{field: "\"archive\".\"id\""},
 	Path:         whereHelperstring{field: "\"archive\".\"path\""},
@@ -269,8 +299,9 @@ var ArchiveWhere = struct {
 	Pages:        whereHelperint16{field: "\"archive\".\"pages\""},
 	Size:         whereHelperint64{field: "\"archive\".\"size\""},
 	Expunged:     whereHelperbool{field: "\"archive\".\"expunged\""},
-	RedirectID:   whereHelpernull_Int64{field: "\"archive\".\"redirect_id\""},
+	Source:       whereHelpernull_String{field: "\"archive\".\"source\""},
 	SubmissionID: whereHelpernull_Int64{field: "\"archive\".\"submission_id\""},
+	RedirectID:   whereHelpernull_Int64{field: "\"archive\".\"redirect_id\""},
 }
 
 // ArchiveRels is where relationship names are stored.
@@ -381,9 +412,9 @@ func (r *archiveR) GetUsers() UserSlice {
 type archiveL struct{}
 
 var (
-	archiveAllColumns            = []string{"id", "path", "created_at", "updated_at", "published_at", "title", "slug", "pages", "size", "expunged", "redirect_id", "submission_id"}
+	archiveAllColumns            = []string{"id", "path", "created_at", "updated_at", "published_at", "title", "slug", "pages", "size", "expunged", "source", "submission_id", "redirect_id"}
 	archiveColumnsWithoutDefault = []string{"path", "pages", "size"}
-	archiveColumnsWithDefault    = []string{"id", "created_at", "updated_at", "published_at", "title", "slug", "expunged", "redirect_id", "submission_id"}
+	archiveColumnsWithDefault    = []string{"id", "created_at", "updated_at", "published_at", "title", "slug", "expunged", "source", "submission_id", "redirect_id"}
 	archivePrimaryKeyColumns     = []string{"id"}
 	archiveGeneratedColumns      = []string{}
 )

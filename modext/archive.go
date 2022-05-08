@@ -13,10 +13,11 @@ type Archive struct {
 	UpdatedAt   int64 `json:"updatedAt"`
 	PublishedAt int64 `json:"publishedAt,omitempty"`
 
-	Title string `json:"title"`
-	Slug  string `json:"slug"`
-	Pages int16  `json:"pages,omitempty"`
-	Size  int64  `json:"size,omitempty"`
+	Title  string `json:"title"`
+	Slug   string `json:"slug"`
+	Pages  int16  `json:"pages,omitempty"`
+	Size   int64  `json:"size,omitempty"`
+	Source string `json:"source,omitempty"`
 
 	Artists    []*Artist   `json:"artists,omitempty"`
 	Circles    []*Circle   `json:"circles,omitempty"`
@@ -39,10 +40,11 @@ func NewArchive(model *models.Archive) *Archive {
 		CreatedAt: model.CreatedAt.Unix(),
 		UpdatedAt: model.UpdatedAt.Unix(),
 
-		Title: model.Title,
-		Slug:  model.Slug,
-		Pages: model.Pages,
-		Size:  model.Size,
+		Title:  model.Title,
+		Slug:   model.Slug,
+		Pages:  model.Pages,
+		Size:   model.Size,
+		Source: model.Source.String,
 	}
 
 	if model.RedirectID.Valid {

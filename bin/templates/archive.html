@@ -86,23 +86,33 @@
                 <td>{{ formatBytes .archive.Size }}</td>
               </tr>
               {{- $format := "Mon, 02 Jan 2006 15:04:05 MST" }}
-              <tr class="created">
+              <tr class="created createdAt">
                 <td>Created</td>
                 <td data-unix="{{ .archive.CreatedAt }}">{{ formatUnix .archive.CreatedAt $format }}</td>
               </tr>
-              <tr class="published">
+              <tr class="published publishedAt">
                 <td>Published</td>
                 <td data-unix="{{ .archive.PublishedAt }}">{{ formatUnix .archive.PublishedAt $format }}</td>
               </tr>
               {{- if .archive.Submission }}
                 <tr class="submitter">
-                  <td>Submitter</td>
+                  <td>Submitter/Uploader</td>
                   <td>
                     {{- if .archive.Submission.Submitter }}
                       {{ .archive.Submission.Submitter }}
                     {{- else }}
                       anonymous
                     {{- end }}
+                  </td>
+                </tr>
+              {{- end }}
+              {{- if .archive.Source }}
+                <tr class="source">
+                  <td>Source</td>
+                  <td>
+                    <a href="{{ .archive.Source }}" rel="nofollow noopener noreferrer" target="_blank"
+                      >{{ .archive.Source }}</a
+                    >
                   </td>
                 </tr>
               {{- end }}
@@ -148,6 +158,26 @@
               </svg>
               <span>Download</span>
             </a>
+            {{- if and .archive.Source (contains .archive.Source "nyaa.si") }}
+              <a class="torrent" href="{{ .archive.Source }}" rel="nofollow noopener noreferrer" target="_blank">
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                >
+                  <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
+                  <polyline points="15 3 21 3 21 9"></polyline>
+                  <line x1="10" y1="14" x2="21" y2="3"></line>
+                </svg>
+                <span>Torrent</span>
+              </a>
+            {{- end }}
           </div>
         </div>
         <div class="previews">

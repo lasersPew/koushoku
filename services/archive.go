@@ -800,6 +800,25 @@ func RedirectArchive(from, to int64) error {
 	return nil
 }
 
+func SetArchiveSource(id int64, source string) error {
+	archive, err := models.FindArchiveG(id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return errs.ArchiveNotFound
+		}
+		log.Println(err)
+		return errs.Unknown
+	}
+
+	archive.Source = null.NewString(source, len(source) > 0)
+	if err := archive.UpdateG(boil.Whitelist(ArchiveCols.Source)); err != nil {
+		log.Println(err)
+		return errs.Unknown
+	}
+
+	return nil
+}
+
 func DeleteArchive(id int64) error {
 	archive, err := models.FindArchiveG(id)
 	if err != nil {

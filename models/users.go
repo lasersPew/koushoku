@@ -449,7 +449,7 @@ func (userL) LoadArchives(e boil.Executor, singular bool, maybeUser interface{},
 	}
 
 	query := NewQuery(
-		qm.Select("\"archive\".\"id\", \"archive\".\"path\", \"archive\".\"created_at\", \"archive\".\"updated_at\", \"archive\".\"published_at\", \"archive\".\"title\", \"archive\".\"slug\", \"archive\".\"pages\", \"archive\".\"size\", \"archive\".\"expunged\", \"archive\".\"redirect_id\", \"archive\".\"submission_id\", \"a\".\"user_id\""),
+		qm.Select("\"archive\".\"id\", \"archive\".\"path\", \"archive\".\"created_at\", \"archive\".\"updated_at\", \"archive\".\"published_at\", \"archive\".\"title\", \"archive\".\"slug\", \"archive\".\"pages\", \"archive\".\"size\", \"archive\".\"expunged\", \"archive\".\"source\", \"archive\".\"submission_id\", \"archive\".\"redirect_id\", \"a\".\"user_id\""),
 		qm.From("\"archive\""),
 		qm.InnerJoin("\"user_favorites\" as \"a\" on \"archive\".\"id\" = \"a\".\"archive_id\""),
 		qm.WhereIn("\"a\".\"user_id\" in ?", args...),
@@ -470,7 +470,7 @@ func (userL) LoadArchives(e boil.Executor, singular bool, maybeUser interface{},
 		one := new(Archive)
 		var localJoinCol int64
 
-		err = results.Scan(&one.ID, &one.Path, &one.CreatedAt, &one.UpdatedAt, &one.PublishedAt, &one.Title, &one.Slug, &one.Pages, &one.Size, &one.Expunged, &one.RedirectID, &one.SubmissionID, &localJoinCol)
+		err = results.Scan(&one.ID, &one.Path, &one.CreatedAt, &one.UpdatedAt, &one.PublishedAt, &one.Title, &one.Slug, &one.Pages, &one.Size, &one.Expunged, &one.Source, &one.SubmissionID, &one.RedirectID, &localJoinCol)
 		if err != nil {
 			return errors.Wrap(err, "failed to scan eager loaded results for archive")
 		}

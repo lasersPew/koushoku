@@ -57,13 +57,26 @@ func Archive(c *server.Context) {
 	}
 
 	slug := c.Param("slug")
+	isJson := strings.HasSuffix(slug, ".json")
+	if isJson {
+		slug = strings.TrimSuffix(slug, ".json")
+	}
+
 	if !strings.EqualFold(slug, result.Archive.Slug) {
-		c.Redirect(http.StatusFound, fmt.Sprintf("/archive/%d/%s", result.Archive.ID, result.Archive.Slug))
+		slug = result.Archive.Slug
+		if isJson {
+			slug += ".json"
+		}
+		c.Redirect(http.StatusFound, fmt.Sprintf("/archive/%d/%s", result.Archive.ID, slug))
 		return
 	}
 
-	c.SetData("archive", result.Archive)
-	c.Cache(http.StatusOK, archiveTemplateName)
+	if isJson {
+		c.JSON(http.StatusOK, result.Archive)
+	} else {
+		c.SetData("archive", result.Archive)
+		c.Cache(http.StatusOK, archiveTemplateName)
+	}
 }
 
 func Download(c *server.Context) {

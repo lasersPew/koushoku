@@ -4,7 +4,7 @@ import "koushoku/models"
 
 type Archive struct {
 	ID   int64  `json:"id"`
-	Path string `json:"path"`
+	Path string `json:"-"`
 
 	Expunged   bool  `json:"expunged,omitempty"`
 	RedirectId int64 `json:"redirectId,omitempty"`

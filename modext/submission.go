@@ -8,10 +8,10 @@ type Submission struct {
 	CreatedAt int64 `json:"createdAt"`
 	UpdatedAt int64 `json:"updatedAt"`
 
-	Name      string `json:"name"`
+	Name      string `json:"-"`
 	Submitter string `json:"submitter,omitempty"`
-	Content   string `json:"content"`
-	Notes     string `json:"notes"`
+	Content   string `json:"-"`
+	Notes     string `json:"-"`
 
 	AcceptedAt int64 `json:"acceptedAt,omitempty"`
 	RejectedAt int64 `json:"rejectedAt,omitempty"`

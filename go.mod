@@ -9,6 +9,7 @@ require (
 	github.com/gin-contrib/gzip v0.0.5
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-redis/redis/v8 v8.11.4
+	github.com/google/uuid v1.3.0
 	github.com/gosimple/slug v1.12.0
 	github.com/jackc/pgx/v4 v4.15.0
 	github.com/jessevdk/go-flags v1.5.0

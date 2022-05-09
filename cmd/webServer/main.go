@@ -67,6 +67,9 @@ func main() {
 	server.POST("/submit", server.WithName("Submit"), server.WithRateLimit("Submit?", "10-D"), submitPost)
 	server.GET("/submissions", submisisions)
 
+	server.POST("/api/purge-cache", purgeCache)
+	server.POST("/api/reload-templates", reloadTemplates)
+
 	server.NoRoute(func(c *server.Context) {
 		c.HTML(http.StatusNotFound, "error.html")
 	})

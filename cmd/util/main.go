@@ -51,6 +51,15 @@ var opts struct {
 	Expunge  bool    `long:"expunge"`
 	Redirect int64   `long:"redirect"`
 	Source   string  `long:"source"`
+
+	StartPort             int  `long:"start-port"`
+	EndPort               int  `long:"end-port"`
+	PurgeCaches           bool `long:"purge-caches"`
+	PurgeArchivesCache    bool `long:"purge-archives-cache"`
+	PurgeTaxonomiesCache  bool `long:"purge-taxonomies-cache"`
+	PurgeTemplatesCache   bool `long:"purge-templates-cache"`
+	PurgeSubmissionsCache bool `long:"purge-submissions-cache"`
+	ReloadTemplates       bool `long:"reload-templates"`
 }
 
 func main() {
@@ -230,5 +239,21 @@ func main() {
 				SetArchiveSource(id, opts.Source)
 			}
 		}
+	}
+
+	if opts.PurgeCaches || opts.PurgeArchivesCache || opts.PurgeTaxonomiesCache ||
+		opts.PurgeTemplatesCache || opts.PurgeSubmissionsCache {
+		log.Println("Purging caches...")
+		purgeCaches(opts.StartPort, opts.EndPort, PurgeCacheOptions{
+			Archives:    opts.PurgeArchivesCache || opts.PurgeCaches,
+			Taxonomies:  opts.PurgeTaxonomiesCache || opts.PurgeCaches,
+			Templates:   opts.PurgeTemplatesCache || opts.PurgeCaches,
+			Submissions: opts.PurgeSubmissionsCache || opts.PurgeCaches,
+		})
+	}
+
+	if opts.ReloadTemplates {
+		log.Println("Reloading templates...")
+		reloadTemplates(opts.StartPort, opts.EndPort)
 	}
 }

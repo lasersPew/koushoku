@@ -9,6 +9,7 @@ import (
 	"strconv"
 	"sync"
 
+	"github.com/google/uuid"
 	"github.com/jessevdk/go-flags"
 	"gopkg.in/ini.v1"
 )
@@ -60,6 +61,7 @@ var Config struct {
 
 	HTTP struct {
 		Cookie string
+		ApiKey string
 	}
 
 	Cloudflare struct {
@@ -188,6 +190,7 @@ func init() {
 	Config.Server.WebPort = 42073
 	Config.Server.DataPort = 42075
 	Config.HTTP.Cookie = file.Section("http").Key("cookie").String()
+	Config.HTTP.ApiKey = file.Section("http").Key("api_key").MustString(uuid.NewString())
 
 	Config.Cloudflare.Email = file.Section("cloudflare").Key("email").MustString("")
 	Config.Cloudflare.ApiKey = file.Section("cloudflare").Key("api_key").MustString("")
@@ -242,6 +245,7 @@ func Save() error {
 	Config.file.Section("redis").Key("passwd").SetValue(Config.Redis.Passwd)
 
 	Config.file.Section("http").Key("cookie").SetValue(Config.HTTP.Cookie)
+	Config.file.Section("http").Key("api_key").SetValue(Config.HTTP.ApiKey)
 
 	Config.file.Section("cloudflare").Key("email").SetValue(Config.Cloudflare.Email)
 	Config.file.Section("cloudflare").Key("api_key").SetValue(Config.Cloudflare.ApiKey)

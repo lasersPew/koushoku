@@ -117,11 +117,6 @@ func main() {
 		}
 	}
 
-	if opts.GenerateThumbnails {
-		log.Println("Generating thumbnails...")
-		services.GenerateThumbnails()
-	}
-
 	if opts.Import {
 		log.Println("Importing metadata...")
 		services.ImportMetadata()
@@ -203,6 +198,11 @@ func main() {
 		if err := services.UnpublishArchives(); err != nil {
 			log.Fatalln(err)
 		}
+	}
+
+	if opts.GenerateThumbnails {
+		log.Println("Generating thumbnails...")
+		services.GenerateThumbnails()
 	}
 
 	if opts.UpdateSlugs {

@@ -36,10 +36,10 @@ func scanPorts(startPort, endPort int) {
 	}
 
 	if endPort == 0 {
-		endPort = 42076
+		endPort = 42074
 	}
 
-	for port := startPort; port < endPort && len(ports) < 4; port++ {
+	for port := startPort; port <= endPort && len(ports) < 4; port++ {
 		conn, err := net.Dial("tcp", net.JoinHostPort("localhost", strconv.Itoa(port)))
 		if err != nil {
 			continue
@@ -72,7 +72,9 @@ func purgeCaches(startPort, endPort int, opts PurgeCacheOptions) {
 		}
 		defer res.Body.Close()
 
-		if res.StatusCode != 200 {
+		if res.StatusCode == 200 {
+			log.Printf("Purged caches on port %d\n", port)
+		} else {
 			log.Fatalf("Failed to purge archives cache: %s", res.Status)
 		}
 	}
@@ -101,7 +103,9 @@ func reloadTemplates(startPort, endPort int) {
 		}
 		defer res.Body.Close()
 
-		if res.StatusCode != 200 {
+		if res.StatusCode == 200 {
+			log.Printf("Reloaded templates on port %d\n", port)
+		} else {
 			log.Fatalf("Failed to reload templates: %s", res.Status)
 		}
 	}

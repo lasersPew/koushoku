@@ -1,4 +1,4 @@
-package controllers
+package main
 
 import (
 	"fmt"
@@ -12,13 +12,6 @@ import (
 	"koushoku/services"
 )
 
-const (
-	indexLimit          = 25
-	indexTemplateName   = "index.html"
-	searchTemplateName  = "search.html"
-	sitemapTemplateName = "sitemap.xml"
-)
-
 type SearchQueries struct {
 	Search string `form:"q"`
 	Page   int    `form:"page"`
@@ -26,12 +19,20 @@ type SearchQueries struct {
 	Order  string `form:"order"`
 }
 
+const (
+	indexLimit      = 25
+	indexTmplName   = "index.html"
+	aboutTmplName   = "about.html"
+	statsTmplName   = "stats.html"
+	searchTmplName  = "search.html"
+	sitemapTmplName = "sitemap.xml"
+)
+
 func createNewSearchQueries(c *server.Context) *SearchQueries {
 	q := &SearchQueries{}
 	c.BindQuery(q)
 
 	q.Search = strings.TrimSpace(q.Search)
-
 	if len(q.Sort) == 0 {
 		q.Sort = "created_at"
 	} else {
@@ -43,17 +44,16 @@ func createNewSearchQueries(c *server.Context) *SearchQueries {
 	} else {
 		q.Order = strings.ToLower(q.Order)
 	}
-
 	return q
 }
 
-func Index(c *server.Context) {
-	if c.TryCache(indexTemplateName) {
+func index(c *server.Context) {
+	if c.TryCache(indexTmplName) {
 		return
 	}
 
 	q := createNewSearchQueries(c)
-	opts := &services.GetArchivesOptions{
+	result := services.GetArchives(&services.GetArchivesOptions{
 		Limit:  indexLimit,
 		Offset: indexLimit * (q.Page - 1),
 		Preloads: []string{
@@ -62,12 +62,9 @@ func Index(c *server.Context) {
 			services.ArchiveRels.Magazines,
 			services.ArchiveRels.Tags,
 		},
-
 		Sort:  q.Sort,
 		Order: q.Order,
-	}
-
-	result := services.GetArchives(opts)
+	})
 	if result.Err != nil {
 		c.SetData("error", result.Err)
 		c.HTML(http.StatusInternalServerError, "error.html")
@@ -81,13 +78,12 @@ func Index(c *server.Context) {
 		c.SetData("name", "Home")
 	}
 
+	totalPages := int(math.Ceil(float64(result.Total) / float64(indexLimit)))
 	c.SetData("archives", result.Archives)
 	c.SetData("total", result.Total)
-
-	totalPages := int(math.Ceil(float64(result.Total) / float64(indexLimit)))
 	c.SetData("pagination", services.CreatePagination(q.Page, totalPages))
 
-	c.Cache(http.StatusOK, indexTemplateName)
+	c.Cache(http.StatusOK, indexTmplName)
 }
 
 var rgx = regexp.MustCompile(`(?i)-?(artist|circle|magazine|parody|tag|title|pages)(&|\|)?(\*)?:(<=?|>=?)?(\".*?\"|[^\s]+)`)
@@ -98,8 +94,8 @@ const (
 	opWildcard = "*"
 )
 
-func Search(c *server.Context) {
-	if c.TryCache(searchTemplateName) {
+func search(c *server.Context) {
+	if c.TryCache(searchTmplName) {
 		return
 	}
 
@@ -113,7 +109,6 @@ func Search(c *server.Context) {
 			services.ArchiveRels.Magazines,
 			services.ArchiveRels.Tags,
 		},
-
 		Sort:  q.Sort,
 		Order: q.Order,
 	}
@@ -315,14 +310,27 @@ func Search(c *server.Context) {
 	c.SetData("pagination", services.CreatePagination(q.Page, totalPages))
 
 	if len(result.Archives) > 0 {
-		c.Cache(http.StatusOK, searchTemplateName)
+		c.Cache(http.StatusOK, searchTmplName)
 	} else {
-		c.Cache(http.StatusNotFound, searchTemplateName)
+		c.Cache(http.StatusNotFound, searchTmplName)
 	}
 }
 
-func Sitemap(c *server.Context) {
-	if c.TryCache(sitemapTemplateName) {
+func about(c *server.Context) {
+	if !c.TryCache(aboutTmplName) {
+		c.Cache(http.StatusOK, aboutTmplName)
+	}
+}
+
+func stats(c *server.Context) {
+	if !c.TryCache(statsTmplName) {
+		c.SetData("stats", services.GetStats())
+		c.Cache(http.StatusOK, statsTmplName)
+	}
+}
+
+func sitemap(c *server.Context) {
+	if c.TryCache(sitemapTmplName) {
 		return
 	}
 
@@ -354,5 +362,5 @@ func Sitemap(c *server.Context) {
 	c.SetData("artists", artists.Artists)
 	c.SetData("magazines", magazines.Magazines)
 	c.SetData("tags", tags.Tags)
-	c.Cache(http.StatusOK, sitemapTemplateName)
+	c.Cache(http.StatusOK, sitemapTmplName)
 }

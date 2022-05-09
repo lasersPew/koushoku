@@ -50,7 +50,6 @@ func (c *Context) preHTML(code *int) {
 	c.SetData("baseURL", Config.Meta.BaseURL)
 	c.SetData("dataBaseURL", Config.Meta.DataBaseURL)
 	c.SetData("language", Config.Meta.Language)
-
 	c.SetData("url", c.GetURL())
 	c.SetData("query", c.Request.URL.Query())
 }
@@ -137,7 +136,6 @@ func (c *Context) SetCookie(name, value string, expires *time.Time) {
 	} else {
 		cookie.Expires = *expires
 	}
-
 	http.SetCookie(c.Writer, cookie)
 }
 

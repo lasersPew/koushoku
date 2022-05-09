@@ -10,7 +10,7 @@ import (
 	. "koushoku/config"
 )
 
-var aliases struct {
+var Aliases struct {
 	ArchiveMatches  map[string]string
 	ArtistMatches   map[string]string
 	CircleMatches   map[string]string
@@ -21,14 +21,14 @@ var aliases struct {
 	once sync.Once
 }
 
-func loadAliases() {
-	aliases.once.Do(func() {
-		aliases.ArchiveMatches = make(map[string]string)
-		aliases.ArtistMatches = make(map[string]string)
-		aliases.CircleMatches = make(map[string]string)
-		aliases.MagazineMatches = make(map[string]string)
-		aliases.ParodyMatches = make(map[string]string)
-		aliases.TagMatches = make(map[string]string)
+func InitAliases() {
+	Aliases.once.Do(func() {
+		Aliases.ArchiveMatches = make(map[string]string)
+		Aliases.ArtistMatches = make(map[string]string)
+		Aliases.CircleMatches = make(map[string]string)
+		Aliases.MagazineMatches = make(map[string]string)
+		Aliases.ParodyMatches = make(map[string]string)
+		Aliases.TagMatches = make(map[string]string)
 
 		stat, err := os.Stat(Config.Paths.Alias)
 		if os.IsNotExist(err) || stat.IsDir() {
@@ -61,17 +61,17 @@ func loadAliases() {
 
 			switch strings.TrimSpace(strs[0]) {
 			case "title":
-				aliases.ArchiveMatches[k] = v
+				Aliases.ArchiveMatches[k] = v
 			case "artist":
-				aliases.ArtistMatches[k] = v
+				Aliases.ArtistMatches[k] = v
 			case "circle":
-				aliases.CircleMatches[k] = v
+				Aliases.CircleMatches[k] = v
 			case "magazine":
-				aliases.MagazineMatches[k] = v
+				Aliases.MagazineMatches[k] = v
 			case "parody":
-				aliases.ParodyMatches[k] = v
+				Aliases.ParodyMatches[k] = v
 			case "tag":
-				aliases.TagMatches[k] = v
+				Aliases.TagMatches[k] = v
 			}
 		}
 

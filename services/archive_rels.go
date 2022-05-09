@@ -22,7 +22,7 @@ var relsCache struct {
 	sync.Once
 }
 
-func populateArchiveRels(e boil.Executor, model *models.Archive, archive *modext.Archive) error {
+func PopulateArchiveRels(e boil.Executor, model *models.Archive, archive *modext.Archive) error {
 	relsCache.Do(func() {
 		relsCache.Lock()
 		defer relsCache.Unlock()
@@ -187,7 +187,7 @@ func populateArchiveRels(e boil.Executor, model *models.Archive, archive *modext
 	return nil
 }
 
-func validateRels(rels []string) (result []string) {
+func validateArchiveRels(rels []string) (result []string) {
 	for _, v := range rels {
 		if strings.EqualFold(v, ArchiveRels.Artists) {
 			result = append(result, ArchiveRels.Artists)

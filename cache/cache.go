@@ -38,7 +38,6 @@ func Init() {
 	Taxonomies = New(4096, defaultExpr)
 	Templates = New(4096, templateExpr)
 	Submissions = New(4096, defaultExpr)
-
 	Users = New(2048, defaultExpr)
 	Favorites = New(2048, defaultExpr)
 	Cache = New(512, defaultExpr)

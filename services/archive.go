@@ -21,7 +21,6 @@ import (
 	"github.com/pkg/errors"
 	"github.com/volatiletech/null/v8"
 	"github.com/volatiletech/sqlboiler/v4/boil"
-
 	. "github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
@@ -115,7 +114,7 @@ func insertArchive(archive *modext.Archive, upsert bool) (*modext.Archive, error
 
 	err = op(tx, boil.Infer())
 	if err == nil {
-		err = populateArchiveRels(tx, model, archive)
+		err = PopulateArchiveRels(tx, model, archive)
 		if err == nil {
 			err = tx.Commit()
 		} else {
@@ -150,7 +149,7 @@ type GetArchiveResult struct {
 }
 
 func GetArchive(id int64, opts GetArchiveOptions) (result *GetArchiveResult) {
-	opts.Preloads = validateRels(opts.Preloads)
+	opts.Preloads = validateArchiveRels(opts.Preloads)
 
 	cacheKey := makeCacheKey(opts)
 	if c, err := cache.Archives.GetWithPrefix(id, cacheKey); err == nil {
@@ -295,7 +294,7 @@ func (opts *GetArchivesOptions) Validate() {
 		opts.Offset = Max(opts.Offset, 0)
 	}
 
-	opts.Preloads = validateRels(opts.Preloads)
+	opts.Preloads = validateArchiveRels(opts.Preloads)
 	if strings.EqualFold(opts.Sort, ArchiveCols.ID) {
 		opts.Sort = ArchiveCols.ID
 	} else if strings.EqualFold(opts.Sort, ArchiveCols.UpdatedAt) {

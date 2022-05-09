@@ -15,6 +15,9 @@ import (
 	"strings"
 	"sync"
 
+	. "koushoku/config"
+	"koushoku/modext"
+
 	"github.com/gosimple/slug"
 	"github.com/pkg/errors"
 	"golang.org/x/text/language"
@@ -328,4 +331,28 @@ func RunCommand(path string, args ...string) (*bytes.Buffer, error) {
 		return nil, errors.New(err)
 	}
 	return &buf, nil
+}
+
+func GetArchiveSymlink(id int) (string, error) {
+	symlink := filepath.Join(Config.Directories.Symlinks, strconv.Itoa(id))
+	return os.Readlink(symlink)
+}
+
+func CreateArchiveSymlink(archive *modext.Archive) error {
+	if archive == nil {
+		return nil
+	}
+
+	if _, err := os.Stat(Config.Directories.Symlinks); err != nil {
+		if os.IsNotExist(err) {
+			if err := os.MkdirAll(Config.Directories.Symlinks, 0755); err != nil {
+				return err
+			}
+		} else {
+			return err
+		}
+	}
+
+	symlink := filepath.Join(Config.Directories.Symlinks, strconv.Itoa(int(archive.ID)))
+	return os.Symlink(archive.Path, symlink)
 }

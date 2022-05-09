@@ -1,4 +1,4 @@
-package controllers
+package main
 
 import (
 	"fmt"
@@ -12,21 +12,19 @@ import (
 
 const (
 	listingLimit    = 200
-	listingTemplate = "list.html"
+	listingTmplName = "list.html"
 )
 
-func Artists(c *server.Context) {
-	if c.TryCache(listingTemplate) {
+func artists(c *server.Context) {
+	if c.TryCache(listingTmplName) {
 		return
 	}
 
 	page, _ := strconv.Atoi(c.Query("page"))
-	opts := services.GetArtistsOptions{
+	result := services.GetArtists(services.GetArtistsOptions{
 		Limit:  listingLimit,
 		Offset: listingLimit * (page - 1),
-	}
-
-	result := services.GetArtists(opts)
+	})
 	if result.Err != nil {
 		c.SetData("error", result.Err)
 		c.HTML(http.StatusInternalServerError, "error.html")
@@ -49,21 +47,19 @@ func Artists(c *server.Context) {
 	totalPages := int(math.Ceil(float64(result.Total) / float64(listingLimit)))
 	c.SetData("pagination", services.CreatePagination(page, totalPages))
 
-	c.Cache(http.StatusOK, listingTemplate)
+	c.Cache(http.StatusOK, listingTmplName)
 }
 
-func Circles(c *server.Context) {
-	if c.TryCache(listingTemplate) {
+func circles(c *server.Context) {
+	if c.TryCache(listingTmplName) {
 		return
 	}
 
 	page, _ := strconv.Atoi(c.Query("page"))
-	opts := services.GetCirclesOptions{
+	result := services.GetCircles(services.GetCirclesOptions{
 		Limit:  listingLimit,
 		Offset: listingLimit * (page - 1),
-	}
-
-	result := services.GetCircles(opts)
+	})
 	if result.Err != nil {
 		c.SetData("error", result.Err)
 		c.HTML(http.StatusInternalServerError, "error.html")
@@ -77,20 +73,18 @@ func Circles(c *server.Context) {
 		c.SetData("name", "Circles")
 	}
 
+	totalPages := int(math.Ceil(float64(result.Total) / float64(listingLimit)))
 	c.SetData("taxonomy", "circles")
 	c.SetData("taxonomyTitle", "Circles")
-
 	c.SetData("data", result.Circles)
 	c.SetData("total", result.Total)
-
-	totalPages := int(math.Ceil(float64(result.Total) / float64(listingLimit)))
 	c.SetData("pagination", services.CreatePagination(page, totalPages))
 
-	c.Cache(http.StatusOK, listingTemplate)
+	c.Cache(http.StatusOK, listingTmplName)
 }
 
-func Magazines(c *server.Context) {
-	if c.TryCache(listingTemplate) {
+func magazines(c *server.Context) {
+	if c.TryCache(listingTmplName) {
 		return
 	}
 
@@ -114,20 +108,18 @@ func Magazines(c *server.Context) {
 		c.SetData("name", "Magazines")
 	}
 
+	totalPages := int(math.Ceil(float64(result.Total) / float64(listingLimit)))
 	c.SetData("taxonomy", "magazines")
 	c.SetData("taxonomyTitle", "Magazines")
-
 	c.SetData("data", result.Magazines)
 	c.SetData("total", result.Total)
-
-	totalPages := int(math.Ceil(float64(result.Total) / float64(listingLimit)))
 	c.SetData("pagination", services.CreatePagination(page, totalPages))
 
-	c.Cache(http.StatusOK, listingTemplate)
+	c.Cache(http.StatusOK, listingTmplName)
 }
 
-func Parodies(c *server.Context) {
-	if c.TryCache(listingTemplate) {
+func parodies(c *server.Context) {
+	if c.TryCache(listingTmplName) {
 		return
 	}
 
@@ -151,20 +143,18 @@ func Parodies(c *server.Context) {
 		c.SetData("name", "Parodies")
 	}
 
+	totalPages := int(math.Ceil(float64(result.Total) / float64(listingLimit)))
 	c.SetData("taxonomy", "parodies")
 	c.SetData("taxonomyTitle", "Parodies")
-
 	c.SetData("data", result.Parodies)
 	c.SetData("total", result.Total)
-
-	totalPages := int(math.Ceil(float64(result.Total) / float64(listingLimit)))
 	c.SetData("pagination", services.CreatePagination(page, totalPages))
 
-	c.Cache(http.StatusOK, listingTemplate)
+	c.Cache(http.StatusOK, listingTmplName)
 }
 
-func Tags(c *server.Context) {
-	if c.TryCache(listingTemplate) {
+func tags(c *server.Context) {
+	if c.TryCache(listingTmplName) {
 		return
 	}
 
@@ -178,9 +168,8 @@ func Tags(c *server.Context) {
 	c.SetData("name", "Tags")
 	c.SetData("taxonomy", "tags")
 	c.SetData("taxonomyTitle", "Tags")
-
 	c.SetData("data", result.Tags)
 	c.SetData("total", result.Total)
 
-	c.Cache(http.StatusOK, listingTemplate)
+	c.Cache(http.StatusOK, listingTmplName)
 }

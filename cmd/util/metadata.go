@@ -1,4 +1,4 @@
-package services
+package main
 
 import (
 	"encoding/json"
@@ -8,11 +8,11 @@ import (
 	"net/http/cookiejar"
 	"net/url"
 	"os"
-	"path/filepath"
 	"strings"
 	"sync"
 
 	. "koushoku/config"
+	. "koushoku/services"
 
 	"koushoku/database"
 	"koushoku/models"
@@ -25,219 +25,11 @@ import (
 	. "github.com/volatiletech/sqlboiler/v4/queries/qm"
 )
 
-type Metadata struct {
-	Title     string
-	Artists   []string
-	Circles   []string
-	Magazines []string
-	Parodies  []string
-	Tags      []string
-}
-
-var metadatas struct {
-	Map  map[string]*Metadata
-	once sync.Once
-}
-
-func loadMetadata() {
-	metadatas.once.Do(func() {
-		metadatas.Map = make(map[string]*Metadata)
-		path := filepath.Join(Config.Paths.Metadata)
-
-		stat, err := os.Stat(path)
-		if os.IsNotExist(err) || stat.IsDir() {
-			return
-		}
-
-		buf, err := os.ReadFile(path)
-		if err != nil {
-			log.Println(err)
-			return
-		}
-
-		if err := json.Unmarshal(buf, &metadatas.Map); err != nil {
-			log.Println(err)
-		}
-	})
-}
-
-func ImportMetadata() {
-	loadMetadata()
-
-	archives, err := models.Archives(
-		Load(ArchiveRels.Artists),
-		Load(ArchiveRels.Circles),
-		Load(ArchiveRels.Magazines),
-		Load(ArchiveRels.Parodies),
-		Load(ArchiveRels.Tags),
-	).AllG()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	tx, err := database.Conn.Begin()
-	if err != nil {
-		log.Fatalln(err)
-	}
-
-	var wg sync.WaitGroup
-	wg.Add(len(archives))
-
-	c := make(chan bool, 20)
-	defer close(c)
-
-	for _, model := range archives {
-		c <- true
-		go func(model *models.Archive) {
-			defer func() {
-				wg.Done()
-				<-c
-			}()
-
-			fn := FileName(model.Path)
-			fnSlug := Slugify(fn)
-
-			metadata, ok := metadatas.Map[fnSlug]
-			if !ok {
-				return
-			}
-
-			log.Println("Importing metadata of", fn)
-			archive := modext.NewArchive(model).LoadRels(model)
-
-			for _, artist := range metadata.Artists {
-				slug := Slugify(artist)
-				if v, ok := aliases.ArtistMatches[slug]; ok {
-					slug = Slugify(v)
-					artist = v
-				}
-
-				isDuplicate := false
-				for _, a := range archive.Artists {
-					if a.Slug == slug {
-						isDuplicate = true
-						break
-					}
-				}
-
-				if !isDuplicate {
-					archive.Artists = append(archive.Artists,
-						&modext.Artist{Name: artist})
-				}
-			}
-
-			for _, circle := range metadata.Circles {
-				slug := Slugify(circle)
-				if v, ok := aliases.CircleMatches[slug]; ok {
-					slug = Slugify(v)
-					circle = v
-				}
-
-				isDuplicate := false
-				for _, c := range archive.Circles {
-					if c.Slug == slug {
-						isDuplicate = true
-						break
-					}
-				}
-
-				if !isDuplicate {
-					archive.Circles = append(archive.Circles,
-						&modext.Circle{Name: circle})
-				}
-			}
-
-			for _, magazine := range metadata.Magazines {
-				slug := Slugify(magazine)
-				if v, ok := aliases.MagazineMatches[slug]; ok {
-					slug = Slugify(v)
-					magazine = v
-				}
-
-				isDuplicate := false
-				for _, m := range archive.Magazines {
-					if m.Slug == slug {
-						isDuplicate = true
-						break
-					}
-				}
-
-				if !isDuplicate {
-					archive.Magazines = append(archive.Magazines,
-						&modext.Magazine{Name: magazine})
-				}
-			}
-
-			for _, parody := range metadata.Parodies {
-				slug := Slugify(parody)
-				if v, ok := aliases.ParodyMatches[slug]; ok {
-					slug = Slugify(v)
-					parody = v
-				}
-
-				isDuplicate := false
-				for _, p := range archive.Parodies {
-					if p.Slug == slug {
-						isDuplicate = true
-						break
-					}
-				}
-
-				if !isDuplicate {
-					archive.Parodies = append(archive.Parodies,
-						&modext.Parody{Name: parody})
-				}
-			}
-
-			for _, tag := range metadata.Tags {
-				slug := Slugify(tag)
-				if v, ok := aliases.TagMatches[slug]; ok {
-					slug = Slugify(v)
-					tag = v
-				}
-
-				isDuplicate := false
-				for _, t := range archive.Tags {
-					if t.Slug == slug {
-						isDuplicate = true
-						break
-					}
-				}
-
-				if !isDuplicate {
-					archive.Tags = append(archive.Tags,
-						&modext.Tag{Name: tag})
-				}
-			}
-
-			if len(metadata.Title) > 0 && metadata.Title != archive.Title {
-				model.Title = metadata.Title
-				model.Slug = Slugify(model.Title)
-
-				if v, ok := aliases.ArchiveMatches[model.Slug]; ok {
-					model.Slug = Slugify(v)
-					model.Title = v
-				}
-
-				if err := model.Update(tx, boil.Whitelist(ArchiveCols.Title, ArchiveCols.Slug)); err != nil {
-					log.Fatalln(err)
-				}
-			}
-
-			if err := populateArchiveRels(tx, model, archive); err != nil {
-				log.Fatalln(err)
-			}
-		}(model)
-	}
-	wg.Wait()
-
-	if err := tx.Commit(); err != nil {
-		log.Fatalln(err)
-	}
-}
-
-const fBaseURL = "https://www.fakku.net"
-const iBaseURL = "https://irodoricomics.com"
+const (
+	fBaseURL  = "https://www.fakku.net"
+	iBaseURL  = "https://irodoricomics.com"
+	userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36"
+)
 
 var httpClient struct {
 	*http.Client
@@ -250,12 +42,10 @@ func initHttpClient() {
 		if err != nil {
 			log.Fatalln(err)
 		}
-
 		u, err := url.Parse("https://fakku.net")
 		if err != nil {
 			log.Fatalln(err)
 		}
-
 		httpClient.Client = &http.Client{Jar: jar}
 		jar.SetCookies(u, []*http.Cookie{{
 			Name:     "fakku_sid",
@@ -266,14 +56,11 @@ func initHttpClient() {
 	})
 }
 
-const userAgent = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36"
-
 func sendRequest(url string) (*http.Response, error) {
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, err
 	}
-
 	req.Header.Set("User-Agent", userAgent)
 	if strings.Contains(url, "irodoricomics.com") {
 		req.AddCookie(&http.Cookie{
@@ -282,7 +69,6 @@ func sendRequest(url string) (*http.Response, error) {
 			Domain: ".irodoricomics.com",
 		})
 	}
-
 	return httpClient.Do(req)
 }
 
@@ -319,7 +105,7 @@ func searchF(model *models.Archive) (path string, err error) {
 				return true
 			}
 
-			if v, ok := aliases.ArtistMatches[artistSlug]; ok {
+			if v, ok := Aliases.ArtistMatches[artistSlug]; ok {
 				artistSlug = Slugify(v)
 			}
 
@@ -329,7 +115,6 @@ func searchF(model *models.Archive) (path string, err error) {
 					break
 				}
 			}
-
 			return len(path) == 0
 		})
 	return
@@ -365,15 +150,13 @@ func scrapeF(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 	}
 
 	log.Println("[F] metadata found:", fn)
-
-	metadata, ok := metadatas.Map[fnSlug]
+	metadata, ok := Metadatas.Map[fnSlug]
 	if !ok {
 		metadata = &Metadata{}
-		metadatas.Map[fnSlug] = metadata
+		Metadatas.Map[fnSlug] = metadata
 	}
 
 	metadata.Title = strings.TrimSpace(document.Find("body > div > div.grid > div > div > div[class*='table-cell'] > h1").Text())
-
 	fields := document.Find("body > div > div.grid > div > div > div[class*='table-cell'] > .text-sm")
 	fields.Each(func(i int, s *goquery.Selection) {
 		if s.Children().Length() == 1 {
@@ -385,7 +168,7 @@ func scrapeF(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 			artists := strings.Split(strings.TrimSpace(s.Children().Last().Text()), ",")
 			for _, artist := range artists {
 				artist = strings.TrimSpace(artist)
-				if v, ok := aliases.ArtistMatches[Slugify(artist)]; ok {
+				if v, ok := Aliases.ArtistMatches[Slugify(artist)]; ok {
 					artist = v
 				}
 
@@ -396,7 +179,6 @@ func scrapeF(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 						break
 					}
 				}
-
 				if !duplicate {
 					metadata.Artists = append(metadata.Artists, artist)
 				}
@@ -405,7 +187,7 @@ func scrapeF(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 			circles := strings.Split(strings.TrimSpace(s.Children().Last().Text()), ",")
 			for _, circle := range circles {
 				circle = strings.TrimSpace(circle)
-				if v, ok := aliases.CircleMatches[Slugify(circle)]; ok {
+				if v, ok := Aliases.CircleMatches[Slugify(circle)]; ok {
 					circle = v
 				}
 
@@ -424,7 +206,7 @@ func scrapeF(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 			parodies := strings.Split(strings.TrimSpace(s.Children().Last().Text()), ",")
 			for _, parody := range parodies {
 				parody = strings.TrimSpace(parody)
-				if v, ok := aliases.ParodyMatches[Slugify(parody)]; ok {
+				if v, ok := Aliases.ParodyMatches[Slugify(parody)]; ok {
 					parody = v
 				}
 
@@ -435,7 +217,6 @@ func scrapeF(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 						break
 					}
 				}
-
 				if !duplicate {
 					metadata.Parodies = append(metadata.Parodies, parody)
 				}
@@ -444,7 +225,7 @@ func scrapeF(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 			magazines := strings.Split(strings.TrimSpace(s.Children().Last().Text()), ",")
 			for _, magazine := range magazines {
 				magazine = strings.TrimSpace(magazine)
-				if v, ok := aliases.MagazineMatches[Slugify(magazine)]; ok {
+				if v, ok := Aliases.MagazineMatches[Slugify(magazine)]; ok {
 					magazine = v
 				}
 
@@ -455,7 +236,6 @@ func scrapeF(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 						break
 					}
 				}
-
 				if !duplicate {
 					metadata.Magazines = append(metadata.Magazines, magazine)
 				}
@@ -468,7 +248,7 @@ func scrapeF(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 		href, _ := s.Attr("href")
 		if len(href) > 0 {
 			tag := strings.TrimSpace(s.Text())
-			if v, ok := aliases.TagMatches[Slugify(tag)]; ok {
+			if v, ok := Aliases.TagMatches[Slugify(tag)]; ok {
 				tag = v
 			}
 
@@ -479,7 +259,6 @@ func scrapeF(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 					break
 				}
 			}
-
 			if !duplicate {
 				metadata.Tags = append(metadata.Tags, tag)
 			}
@@ -526,7 +305,6 @@ func searchI(model *models.Archive) (path string, err error) {
 				break
 			}
 		}
-
 		return len(path) == 0
 	})
 
@@ -548,7 +326,6 @@ func searchI(model *models.Archive) (path string, err error) {
 					break
 				}
 			}
-
 			return len(path) == 0
 		})
 	}
@@ -589,20 +366,18 @@ func scrapeI(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 	}
 
 	log.Print("[I] metadata found:", fn)
-
-	metadata, ok := metadatas.Map[fnSlug]
+	metadata, ok := Metadatas.Map[fnSlug]
 	if !ok {
 		metadata = &Metadata{}
-		metadatas.Map[fnSlug] = metadata
+		Metadatas.Map[fnSlug] = metadata
 	}
 
 	metadata.Title = strings.TrimSpace(document.Find("h1.title.page-title").Text())
-
 	artists := document.Find(".product-manufacturer a")
 	if artists.Length() > 0 {
 		artists.Each(func(i int, s *goquery.Selection) {
 			artist := strings.TrimSpace(s.Text())
-			if v, ok := aliases.ArtistMatches[Slugify(artist)]; ok {
+			if v, ok := Aliases.ArtistMatches[Slugify(artist)]; ok {
 				artist = v
 			}
 
@@ -613,7 +388,6 @@ func scrapeI(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 					break
 				}
 			}
-
 			if !duplicate {
 				metadata.Artists = append(metadata.Artists, artist)
 			}
@@ -640,7 +414,7 @@ func scrapeI(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 	if tags.Length() > 0 {
 		tags.Each(func(i int, s *goquery.Selection) {
 			tag := strings.TrimSpace(s.Text())
-			if v, ok := aliases.TagMatches[Slugify(tag)]; ok {
+			if v, ok := Aliases.TagMatches[Slugify(tag)]; ok {
 				tag = v
 			}
 
@@ -651,7 +425,6 @@ func scrapeI(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 					break
 				}
 			}
-
 			if !duplicate {
 				metadata.Tags = append(metadata.Tags, tag)
 			}
@@ -660,10 +433,10 @@ func scrapeI(fn, fnSlug, path string, model *models.Archive) (ok bool) {
 	return true
 }
 
-func ScrapeMetadata() {
+func scrapeMetadata() {
 	initHttpClient()
-	loadAliases()
-	loadMetadata()
+	InitAliases()
+	InitMetadatas()
 
 	archives, err := models.Archives(
 		Load(ArchiveRels.Artists),
@@ -694,7 +467,7 @@ func ScrapeMetadata() {
 			fn := FileName(model.Path)
 			fnSlug := Slugify(fn)
 
-			if _, ok := metadatas.Map[fnSlug]; ok {
+			if _, ok := Metadatas.Map[fnSlug]; ok {
 				return
 			}
 
@@ -705,7 +478,7 @@ func ScrapeMetadata() {
 	}
 	wg.Wait()
 
-	buf, err := json.Marshal(metadatas.Map)
+	buf, err := json.Marshal(Metadatas.Map)
 	if err == nil {
 		err = os.WriteFile("metadata.json", buf, 755)
 	}
@@ -715,10 +488,10 @@ func ScrapeMetadata() {
 	}
 }
 
-func ScrapeMetadataById(id int64, fpath, ipath string) {
+func scrapeMetadataById(id int64, fpath, ipath string) {
 	initHttpClient()
-	loadAliases()
-	loadMetadata()
+	InitAliases()
+	InitMetadatas()
 
 	model, err := models.Archives(
 		Where("id = ?", id),
@@ -737,12 +510,187 @@ func ScrapeMetadataById(id int64, fpath, ipath string) {
 		scrapeI(fn, fnSlug, ipath, model)
 	}
 
-	buf, err := json.Marshal(metadatas.Map)
+	buf, err := json.Marshal(Metadatas.Map)
 	if err == nil {
 		err = os.WriteFile("metadata.json", buf, 755)
 	}
 
 	if err != nil {
 		log.Fatalln(errors.WithStack(err))
+	}
+}
+
+func importMetadata() {
+	InitMetadatas()
+
+	archives, err := models.Archives(
+		Load(ArchiveRels.Artists),
+		Load(ArchiveRels.Circles),
+		Load(ArchiveRels.Magazines),
+		Load(ArchiveRels.Parodies),
+		Load(ArchiveRels.Tags),
+	).AllG()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	tx, err := database.Conn.Begin()
+	if err != nil {
+		log.Fatalln(err)
+	}
+
+	var wg sync.WaitGroup
+	wg.Add(len(archives))
+
+	c := make(chan bool, 20)
+	defer close(c)
+
+	for _, model := range archives {
+		c <- true
+		go func(model *models.Archive) {
+			defer func() {
+				wg.Done()
+				<-c
+			}()
+
+			fn := FileName(model.Path)
+			fnSlug := Slugify(fn)
+
+			metadata, ok := Metadatas.Map[fnSlug]
+			if !ok {
+				return
+			}
+
+			log.Println("Importing metadata of", fn)
+			archive := modext.NewArchive(model).LoadRels(model)
+
+			for _, artist := range metadata.Artists {
+				slug := Slugify(artist)
+				if v, ok := Aliases.ArtistMatches[slug]; ok {
+					slug = Slugify(v)
+					artist = v
+				}
+
+				isDuplicate := false
+				for _, a := range archive.Artists {
+					if a.Slug == slug {
+						isDuplicate = true
+						break
+					}
+				}
+
+				if !isDuplicate {
+					archive.Artists = append(archive.Artists,
+						&modext.Artist{Name: artist})
+				}
+			}
+
+			for _, circle := range metadata.Circles {
+				slug := Slugify(circle)
+				if v, ok := Aliases.CircleMatches[slug]; ok {
+					slug = Slugify(v)
+					circle = v
+				}
+
+				isDuplicate := false
+				for _, c := range archive.Circles {
+					if c.Slug == slug {
+						isDuplicate = true
+						break
+					}
+				}
+
+				if !isDuplicate {
+					archive.Circles = append(archive.Circles,
+						&modext.Circle{Name: circle})
+				}
+			}
+
+			for _, magazine := range metadata.Magazines {
+				slug := Slugify(magazine)
+				if v, ok := Aliases.MagazineMatches[slug]; ok {
+					slug = Slugify(v)
+					magazine = v
+				}
+
+				isDuplicate := false
+				for _, m := range archive.Magazines {
+					if m.Slug == slug {
+						isDuplicate = true
+						break
+					}
+				}
+
+				if !isDuplicate {
+					archive.Magazines = append(archive.Magazines,
+						&modext.Magazine{Name: magazine})
+				}
+			}
+
+			for _, parody := range metadata.Parodies {
+				slug := Slugify(parody)
+				if v, ok := Aliases.ParodyMatches[slug]; ok {
+					slug = Slugify(v)
+					parody = v
+				}
+
+				isDuplicate := false
+				for _, p := range archive.Parodies {
+					if p.Slug == slug {
+						isDuplicate = true
+						break
+					}
+				}
+
+				if !isDuplicate {
+					archive.Parodies = append(archive.Parodies,
+						&modext.Parody{Name: parody})
+				}
+			}
+
+			for _, tag := range metadata.Tags {
+				slug := Slugify(tag)
+				if v, ok := Aliases.TagMatches[slug]; ok {
+					slug = Slugify(v)
+					tag = v
+				}
+
+				isDuplicate := false
+				for _, t := range archive.Tags {
+					if t.Slug == slug {
+						isDuplicate = true
+						break
+					}
+				}
+
+				if !isDuplicate {
+					archive.Tags = append(archive.Tags,
+						&modext.Tag{Name: tag})
+				}
+			}
+
+			if len(metadata.Title) > 0 && metadata.Title != archive.Title {
+				model.Title = metadata.Title
+				model.Slug = Slugify(model.Title)
+
+				if v, ok := Aliases.ArchiveMatches[model.Slug]; ok {
+					model.Slug = Slugify(v)
+					model.Title = v
+				}
+
+				if err := model.Update(tx, boil.Whitelist(ArchiveCols.Title, ArchiveCols.Slug)); err != nil {
+					log.Fatalln(err)
+				}
+			}
+
+			if err := PopulateArchiveRels(tx, model, archive); err != nil {
+				log.Fatalln(err)
+			}
+		}(model)
+	}
+	wg.Wait()
+
+	if err := tx.Commit(); err != nil {
+		log.Fatalln(err)
 	}
 }

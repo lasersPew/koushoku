@@ -10,7 +10,7 @@ import (
 	. "koushoku/config"
 )
 
-var blacklists struct {
+var Blacklists struct {
 	ArchiveMatches   map[string]bool
 	ArchiveWildcards []string
 	ArtistMatches    map[string]bool
@@ -21,13 +21,13 @@ var blacklists struct {
 	once sync.Once
 }
 
-func loadBlacklists() {
-	blacklists.once.Do(func() {
-		blacklists.ArchiveMatches = make(map[string]bool)
-		blacklists.ArtistMatches = make(map[string]bool)
-		blacklists.CircleMatches = make(map[string]bool)
-		blacklists.MagazineMatches = make(map[string]bool)
-		blacklists.TagMatches = make(map[string]bool)
+func InitBlacklists() {
+	Blacklists.once.Do(func() {
+		Blacklists.ArchiveMatches = make(map[string]bool)
+		Blacklists.ArtistMatches = make(map[string]bool)
+		Blacklists.CircleMatches = make(map[string]bool)
+		Blacklists.MagazineMatches = make(map[string]bool)
+		Blacklists.TagMatches = make(map[string]bool)
 
 		stat, err := os.Stat(Config.Paths.Blacklist)
 		if os.IsNotExist(err) || stat.IsDir() {
@@ -59,17 +59,17 @@ func loadBlacklists() {
 
 			switch strings.TrimSpace(strs[0]) {
 			case "title":
-				blacklists.ArchiveMatches[v] = true
+				Blacklists.ArchiveMatches[v] = true
 			case "title*":
-				blacklists.ArchiveWildcards = append(blacklists.ArchiveWildcards, v)
+				Blacklists.ArchiveWildcards = append(Blacklists.ArchiveWildcards, v)
 			case "artist":
-				blacklists.ArtistMatches[v] = true
+				Blacklists.ArtistMatches[v] = true
 			case "circle":
-				blacklists.CircleMatches[v] = true
+				Blacklists.CircleMatches[v] = true
 			case "magazine":
-				blacklists.MagazineMatches[v] = true
+				Blacklists.MagazineMatches[v] = true
 			case "tag":
-				blacklists.TagMatches[v] = true
+				Blacklists.TagMatches[v] = true
 			}
 		}
 

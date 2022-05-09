@@ -14,19 +14,19 @@ test:
 build:
 	$(foreach GOARCH,$(ARCHITECTURES),\
 		$(shell export GOARCH=$(GOARCH))\
-		$(shell go build $(LDFLAGS) -o ./bin/$(GOARCH)/webServer ./cmd/webServer/webServer.go)\
-		$(shell go build $(LDFLAGS) -o ./bin/$(GOARCH)/dataServer ./cmd/dataServer/dataServer.go)\
-		$(shell go build $(LDFLAGS) -o ./bin/$(GOARCH)/util ./cmd/util/util.go)\
+		$(shell go build $(LDFLAGS) -o ./bin/$(GOARCH)/webServer ./cmd/webServer/...)\
+		$(shell go build $(LDFLAGS) -o ./bin/$(GOARCH)/dataServer ./cmd/dataServer/...)\
+		$(shell go build $(LDFLAGS) -o ./bin/$(GOARCH)/util ./cmd/util/...)\
 	)\
 
 build-web:
-	cd web && yarn && yarn prod
+	yarn install && yarn prod
 
 run:
-	cd bin && ./server
+	cd bin && ./webServer
 
 dev:
-	cd bin && ./server -m development
+	cd bin && ./webServer -m development
 
 dev-web:
-	cd web && yarn && yarn dev
+	yarn install && yarn dev

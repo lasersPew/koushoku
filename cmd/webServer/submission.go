@@ -1,4 +1,4 @@
-package controllers
+package main
 
 import (
 	"fmt"
@@ -10,15 +10,14 @@ import (
 )
 
 const (
-	submitTemplateName      = "submit.html"
-	submissionsTemplateName = "submissions.html"
+	submitTmplName      = "submit.html"
+	submissionsTmplname = "submissions.html"
 )
 
-func Submit(c *server.Context) {
-	if c.TryCache(submitTemplateName) {
-		return
+func submit(c *server.Context) {
+	if !c.TryCache(submitTmplName) {
+		c.Cache(http.StatusOK, submitTmplName)
 	}
-	c.Cache(http.StatusOK, submitTemplateName)
 }
 
 type SubmitPayload struct {
@@ -27,7 +26,7 @@ type SubmitPayload struct {
 	Content   string `form:"content"`
 }
 
-func SubmitPost(c *server.Context) {
+func submitPost(c *server.Context) {
 	payload := &SubmitPayload{}
 	c.Bind(payload)
 
@@ -36,18 +35,16 @@ func SubmitPost(c *server.Context) {
 		c.SetData("lastSubmissionName", payload.Name)
 		c.SetData("lastSubmissionSubmitter", payload.Submitter)
 		c.SetData("lastSubmissionContent", payload.Content)
-
 		c.SetData("error", err)
-		c.HTML(http.StatusBadRequest, submitTemplateName)
+		c.HTML(http.StatusBadRequest, submitTmplName)
 		return
 	}
-
 	c.SetData("message", "Your submission has been submitted.")
-	c.HTML(http.StatusOK, submitTemplateName)
+	c.HTML(http.StatusOK, submitTmplName)
 }
 
-func Submissions(c *server.Context) {
-	if c.TryCache(submissionsTemplateName) {
+func submisisions(c *server.Context) {
+	if c.TryCache(submissionsTmplname) {
 		return
 	}
 
@@ -55,12 +52,10 @@ func Submissions(c *server.Context) {
 	c.BindQuery(q)
 
 	page, _ := strconv.Atoi(c.Query("page"))
-	opts := services.GetSubmissionsOptions{
+	result := services.GetSubmissions(services.GetSubmissionsOptions{
 		Limit:  listingLimit,
 		Offset: listingLimit * (page - 1),
-	}
-
-	result := services.GetSubmissions(opts)
+	})
 	if result.Err != nil {
 		c.SetData("error", result.Err)
 		c.HTML(http.StatusInternalServerError, "error.html")
@@ -74,11 +69,10 @@ func Submissions(c *server.Context) {
 		c.SetData("name", "Submissions")
 	}
 
+	totalPages := int(math.Ceil(float64(result.Total) / float64(listingLimit)))
 	c.SetData("data", result.Submissions)
 	c.SetData("total", result.Total)
-
-	totalPages := int(math.Ceil(float64(result.Total) / float64(listingLimit)))
 	c.SetData("pagination", services.CreatePagination(page, totalPages))
 
-	c.Cache(http.StatusOK, submissionsTemplateName)
+	c.Cache(http.StatusOK, submissionsTmplname)
 }

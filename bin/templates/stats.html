@@ -5,31 +5,6 @@
     <body>
       {{- template "header" . }}
       <main id="stats">
-        <h2>Analytics</h2>
-        <div class="total">
-          <div class="bytes">
-            <strong>Data Served</strong>
-            <span>{{ formatBytes .stats.Analytics.Bytes }}</span>
-          </div>
-          <div class="cachedBytes">
-            <strong>Cached Data</strong>
-            <span>{{ formatBytes .stats.Analytics.CachedBytes }}</span>
-          </div>
-          <div class="requests">
-            <strong>Requests</strong>
-            <span>{{ formatNumber .stats.Analytics.Requests }}</span>
-          </div>
-          <div class="cachedRequests">
-            <strong>Cached Requests</strong>
-            <span>{{ formatNumber .stats.Analytics.CachedRequests }}</span>
-          </div>
-        </div>
-        <canvas id="dataChart" width="720" height="400"></canvas>
-        <canvas id="requestsChart" width="720" height="400"></canvas>
-        <p>
-          <small>Last Updated: {{ formatTime .stats.Analytics.LastUpdated "Mon, 02 Jan 2006 15:04:05 MST" }}</small>
-        </p>
-        <p><small>*Resets yearly</small></p>
         <h2>Stats</h2>
         <table>
           <tr>
@@ -74,8 +49,35 @@
           </tr>
         </table>
         <p>
-          <small>*CG sets, illustrations, non-h, spreads, westerns and 1-page manga/doujins are not indexed.</small>
+          <small
+            >*CG sets, illustrations, non-h, spreads, westerns, FURRY and 1-page manga/doujins are not indexed.</small
+          >
         </p>
+        <h2>Analytics</h2>
+        <div class="total">
+          <div class="bytes">
+            <strong>Data Served</strong>
+            <span>{{ formatBytes .stats.Analytics.Bytes }}</span>
+          </div>
+          <div class="cachedBytes">
+            <strong>Cached Data</strong>
+            <span>{{ formatBytes .stats.Analytics.CachedBytes }}</span>
+          </div>
+          <div class="requests">
+            <strong>Requests</strong>
+            <span>{{ formatNumber .stats.Analytics.Requests }}</span>
+          </div>
+          <div class="cachedRequests">
+            <strong>Cached Requests</strong>
+            <span>{{ formatNumber .stats.Analytics.CachedRequests }}</span>
+          </div>
+        </div>
+        <canvas id="dataChart" width="1366" height="400"></canvas>
+        <canvas id="requestsChart" width="1366" height="400"></canvas>
+        <p>
+          <small>Last Updated: {{ formatTime .stats.Analytics.LastUpdated "Mon, 02 Jan 2006 15:04:05 MST" }}</small>
+        </p>
+        <p><small>*Resets yearly</small></p>
       </main>
       {{- template "footer" . }}
 

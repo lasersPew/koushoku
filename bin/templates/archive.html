@@ -96,13 +96,14 @@
               </tr>
               {{- if .archive.Submission }}
                 <tr class="submitter">
-                  <td>Submitter/Uploader</td>
+                  <td>Submitter</td>
                   <td>
                     {{- if .archive.Submission.Submitter }}
                       {{ .archive.Submission.Submitter }}
                     {{- else }}
                       anonymous
                     {{- end }}
+                    (#{{ .archive.Submission.ID }})
                   </td>
                 </tr>
               {{- end }}
@@ -157,6 +158,24 @@
                 <line x1="12" y1="15" x2="12" y2="3"></line>
               </svg>
               <span>Download</span>
+            </a>
+            <a href="/archive/{{ .archive.ID }}/{{ .archive.Slug }}.json" target="_blank">
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="2"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              >
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="16" x2="12" y2="12"></line>
+                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+              </svg>
+              <span>Metadata.json</span>
             </a>
             {{- if and .archive.Source (contains .archive.Source "nyaa.si") }}
               <a class="torrent" href="{{ .archive.Source }}" rel="nofollow noopener noreferrer" target="_blank">

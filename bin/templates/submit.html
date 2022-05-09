@@ -22,7 +22,10 @@
           <li>No watermarks and compressions</li>
           <li>No downscaling or force upscaling</li>
         </ul>
-        <p>To replace an existing archive with a better version, put [Replace] or [Revision] prefix in the title.</p>
+        <p>
+          URL must be either a site which allow downloading, a direct download link or a torrent. To replace an existing
+          archive with a better version, put [Replace] or [Revision] prefix in the title.
+        </p>
         <form method="post" enctype="multipart/form-data">
           <input
             type="text"
@@ -36,7 +39,7 @@
           <input
             type="text"
             name="submitter"
-            placeholder="Submitter/uploader name (Optional)"
+            placeholder="Submitter name (Optional)"
             autocomplete="off"
             maxlength="128"
             {{- if .lastSubmissionSubmitter }}value="{{ .lastSubmissionSubmitter }}"{{- end }}

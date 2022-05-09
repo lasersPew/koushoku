@@ -167,7 +167,11 @@ func GetArchive(id int64, opts GetArchiveOptions) (result *GetArchiveResult) {
 
 	selectQueries := []QueryMod{Where("id = ?", id), And("published_at IS NOT NULL")}
 	for _, v := range opts.Preloads {
-		selectQueries = append(selectQueries, Load(v))
+		if v == ArchiveRels.Artists || v == ArchiveRels.Circles || v == ArchiveRels.Tags {
+			selectQueries = append(selectQueries, Load(v, OrderBy("name ASC")))
+		} else {
+			selectQueries = append(selectQueries, Load(v))
+		}
 	}
 
 	archive, err := models.Archives(selectQueries...).OneG()

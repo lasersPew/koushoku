@@ -271,9 +271,9 @@ body {
     nav {
       ul {
         font-size: 0;
+        text-align: center;
 
         vertical-align: top;
-        display: inline-block;
         margin: 0 -0.8rem;
 
         li {
@@ -299,7 +299,6 @@ body {
         background-color: @bg-secondary;
 
         font-size: 0;
-        float: right;
         margin-top: 0.1rem;
 
         &:hover,
@@ -688,7 +687,6 @@ header .pagination:not(:last-child) {
 @sidebarSz: 35%;
 #archive {
   font-size: 0;
-  padding: 2rem;
 
   > * {
     display: inline-block;
@@ -723,8 +721,8 @@ header .pagination:not(:last-child) {
   }
 }
 
-#archive a[href*="crossdress"],
-#archive a[href*="yaoi"] {
+#archive .tags a[href*="crossdress"],
+#archive .tags a[href*="yaoi"] {
   color: #e53935;
 }
 
@@ -908,6 +906,8 @@ header .pagination:not(:last-child) {
 #about,
 #stats,
 #submission {
+  line-height: 2.4rem;
+
   h2 {
     border-bottom: 0.2rem solid lighten(@bg-secondary, 4%);
     font-size: 2rem;
@@ -916,9 +916,6 @@ header .pagination:not(:last-child) {
     margin-bottom: 1rem;
     padding-bottom: 0.2rem;
   }
-
-  line-height: 2.4rem;
-  max-width: 76rem;
 
   p,
   table {
@@ -1258,16 +1255,6 @@ header .pagination:not(:last-child) {
 
   float: right;
   padding: 0.6rem 1.2rem;
-}
-
-@media (max-width: 832px) {
-  body > header nav {
-    text-align: center;
-    form {
-      float: initial;
-      display: block;
-    }
-  }
 }
 
 @media (max-width: 768px) {

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"io"
+	"mime"
 	"net/http"
 	"os"
 	"path/filepath"
@@ -21,6 +22,7 @@ func main() {
 	server.Init()
 
 	server.GET("/archive/:id/:slug/download", download)
+	server.HEAD("/archive/:id/:slug/download", download)
 	server.GET("/data/:id/:pageNum", serve)
 	server.GET("/data/:id/:pageNum/*width", serve)
 
@@ -46,7 +48,27 @@ func download(c *server.Context) {
 		c.Status(http.StatusNotFound)
 		return
 	}
-	c.FileAttachment(fp, filepath.Base(fp))
+
+	stat, err := os.Stat(fp)
+	if err != nil {
+		c.Status(http.StatusInternalServerError)
+		return
+	}
+
+	c.Header("Accept-Ranges", "bytes")
+	c.Header("Connection", "keep-alive")
+	c.Header("Last-Modified", stat.ModTime().UTC().Format(http.TimeFormat))
+
+	c.Header("Content-Disposition", fmt.Sprintf("attachment; filename=\"%s\"", stat.Name()))
+	c.Header("Content-Length", strconv.FormatInt(stat.Size(), 10))
+	c.Header("Content-Type", mime.TypeByExtension(filepath.Ext(fp)))
+	c.Header("Content-Range", fmt.Sprintf("bytes 0-%d/%d", stat.Size()-1, stat.Size()))
+
+	if c.Request.Method == http.MethodHead {
+		return
+	}
+
+	http.ServeFile(c.Writer, c.Request, fp)
 }
 
 func createThumbnail(c *server.Context, f io.Reader, fp string, w int) (ok bool) {

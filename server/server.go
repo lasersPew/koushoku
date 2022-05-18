@@ -101,3 +101,7 @@ func PUT(relativePath string, handlers ...Handler) {
 func DELETE(relativePath string, handlers ...Handler) {
 	server.DELETE(relativePath, Handlers(handlers).wrap()...)
 }
+
+func HEAD(relativePath string, handlers ...Handler) {
+	server.HEAD(relativePath, Handlers(handlers).wrap()...)
+}
